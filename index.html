@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HRAP Desk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+:root{
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface2:#FFF1F1; --ink:#3A2528; --muted:#9A7A7D; --line:#F8D6D6;
+  --accent:#F7ADAD; --accent-ink:#D4626B; --accent-soft:#FBD2D2; --accent-soft2:#FEF0F0;
+  --aqua:#CCFBFA; --aqua-ink:#1E8A87; --aqua-soft:#EAFEFD;
+  --ok:#1E8A87; --ok-soft:#CCFBFA; --warn:#C98A1B; --warn-soft:#FBEFD3;
+  --shadow:0 10px 30px rgba(200,90,100,.10);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.45}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+h1,h2,h3{font-family:"Fraunces","Iowan Old Style",Georgia,serif;font-weight:600;letter-spacing:-.01em;text-wrap:balance;margin:0}
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+.brand{font-family:"Fraunces",Georgia,serif;font-size:24px;font-weight:700;color:var(--accent-ink);padding:6px 10px 18px}
+.brand small{display:block;font-family:"Nunito Sans",sans-serif;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.nav{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:10px;background:none;border:0;text-align:left;width:100%;color:var(--ink);font-weight:600}
+.nav svg{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav:hover{background:var(--surface2)}
+.nav.active{background:var(--accent);color:#3A2528}
+.side .status{margin-top:auto;font-size:12px;color:var(--muted);padding:10px 12px;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--warn)}
+.dot.on{background:var(--ok)}
+.main{padding:28px 32px 60px;min-width:0}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.head h1{font-size:30px}
+.head p{margin:4px 0 0;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#3A2528}
+.btn.primary:hover{background:var(--accent-ink);color:#fff}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn.ghost:hover{color:var(--ink);background:var(--surface2)}
+.btn.danger{color:#C0392B;border-color:transparent;background:none}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.page{display:none}.page.active{display:block}
+
+/* week */
+.weekbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.weekbar .range{font-family:"Fraunces",Georgia,serif;font-size:19px;font-weight:600;min-width:220px}
+.iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--surface);display:inline-grid;place-items:center;padding:0}
+.iconbtn:hover{background:var(--surface2)}
+.iconbtn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.planner{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) minmax(240px,.9fr);gap:14px;align-items:start}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);display:flex;flex-direction:column;min-height:300px}
+.day.today{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.day.today header{background:var(--accent-soft2)}
+.day header{padding:14px 14px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+.day header b{font-family:"Fraunces",Georgia,serif;font-size:17px;font-weight:600}
+.day header span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.day.today header b{color:var(--accent-ink)}
+.items{list-style:none;margin:0;padding:8px 8px 0;display:flex;flex-direction:column;gap:4px;flex:1}
+.item{display:flex;align-items:flex-start;gap:8px;padding:8px 8px;border-radius:9px;position:relative}
+.item:hover{background:var(--surface2)}
+.item .chk{appearance:none;width:17px;height:17px;border:1.6px solid var(--muted);border-radius:5px;margin:2px 0 0;flex:none;display:grid;place-items:center;background:var(--surface)}
+.item .chk:checked{background:var(--accent);border-color:var(--accent)}
+.item .chk:checked::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.item .txt{flex:1;min-width:0;overflow-wrap:anywhere}
+.item .txt.done{color:var(--muted);text-decoration:line-through}
+.item .time{display:inline-block;font-size:11px;font-weight:700;color:var(--aqua-ink);background:var(--aqua);padding:1px 7px;border-radius:999px;margin-right:6px;font-variant-numeric:tabular-nums;vertical-align:1px}
+.item .del{opacity:0;border:0;background:none;color:var(--muted);padding:0 2px;font-size:16px;line-height:1}
+.item:hover .del,.item .del:focus-visible{opacity:1}
+.item .del:hover{color:#C0392B}
+.adder{display:flex;flex-direction:column;gap:4px;padding:8px}
+.adder-row{display:flex;gap:6px}
+.adder input{flex:1;min-width:0;border:1px dashed var(--line);background:transparent;border-radius:9px;padding:8px 10px}
+.adder input:focus{border-style:solid;border-color:var(--accent);outline:none;background:var(--surface)}
+.adder input.t{flex:0 0 66px;text-align:center;font-variant-numeric:tabular-nums}
+.more-toggle{align-self:flex-start;background:none;border:0;color:var(--muted);font-size:11px;font-weight:700;padding:2px 2px}
+.more-toggle:hover{color:var(--accent-ink)}
+.adder-extra{display:flex;gap:6px}
+.item .meta{display:block;margin-top:3px}
+.item .tag{display:inline-block;font-size:10px;font-weight:700;color:var(--muted);background:var(--surface2);padding:1px 7px;border-radius:999px;margin-right:5px;letter-spacing:.02em}
+.sidecol{display:flex;flex-direction:column;gap:14px}
+.sidecol .card{background:var(--aqua-soft);border-color:var(--aqua)}
+.sidecol .card header{border-color:var(--aqua)}
+.sidecol .card header b{color:var(--aqua-ink)}
+.sidecol .notes{background-image:repeating-linear-gradient(transparent 0 25px,var(--aqua) 25px 26px)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius)}
+.card header{padding:14px 14px 10px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
+.card header b{font-family:"Fraunces",Georgia,serif;font-size:17px;font-weight:600}
+.card header span{font-size:12px;color:var(--muted)}
+.notes{width:100%;border:0;background:transparent;resize:vertical;min-height:150px;padding:12px 14px;line-height:1.6;background-image:repeating-linear-gradient(transparent 0 25px,var(--line) 25px 26px);background-attachment:local;background-position:0 12px}
+.notes:focus{outline:none}
+.hint{font-size:12px;color:var(--muted);margin:14px 0 0}
+
+/* members */
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.search{flex:1;min-width:240px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px solid var(--line);border-radius:12px;padding:0 14px}
+.search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.search svg{width:18px;height:18px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round}
+.search input{flex:1;border:0;background:none;padding:12px 0;font-size:16px}
+.search input:focus{outline:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:600;color:var(--muted)}
+.chip.active{background:var(--accent);border-color:var(--accent);color:#3A2528}
+.chip:hover{color:var(--ink)}
+.members{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:18px;align-items:start}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.list .lhead{display:grid;grid-template-columns:1fr 150px 110px;gap:12px;padding:12px 18px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--line)}
+.grp{padding:10px 18px 6px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);background:var(--accent-soft2);border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:1fr 150px 110px;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line);width:100%;text-align:left;background:none;border-left:0;border-right:0;border-top:0;align-items:center}
+.row:hover{background:var(--surface2)}
+.row.sel{background:var(--accent-soft2);box-shadow:inset 4px 0 0 var(--accent)}
+.row .name{font-weight:700;overflow-wrap:anywhere}
+.row .name mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px}
+.row .tin{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px}
+.pill{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.04em;padding:3px 9px;border-radius:999px;background:var(--ok-soft);color:var(--ok)}
+.pill.partial{background:var(--warn-soft);color:var(--warn)}
+.pill.none{background:var(--surface2);color:var(--muted)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+.detail{position:sticky;top:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.detail .dhead{padding:18px 20px 14px;border-bottom:1px solid var(--line);background:var(--accent-soft2);border-radius:var(--radius) var(--radius) 0 0}
+.detail .dhead .src{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink);margin-bottom:6px}
+.detail h2{font-size:20px;line-height:1.25}
+.fields{padding:8px 20px 16px;display:flex;flex-direction:column;gap:12px}
+.field label{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.field .val{font-size:15px;line-height:1.5;overflow-wrap:anywhere;min-height:22px}
+.field .val.tin{font-variant-numeric:tabular-nums;font-size:17px;letter-spacing:.02em}
+.field .val.blank{color:var(--muted);font-style:italic}
+.field .val .copy{margin-left:8px;font-size:11px;font-weight:700;color:var(--aqua-ink);background:none;border:0;padding:0;vertical-align:1px}
+.field input,.field textarea,.field select{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:9px 11px;background:var(--surface)}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--accent)}
+.field textarea{min-height:76px;resize:vertical}
+.dfoot{display:flex;justify-content:space-between;gap:8px;padding:12px 20px 16px;border-top:1px solid var(--line)}
+.dfoot .r{display:flex;gap:8px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+.toast.show{opacity:1;transform:translateX(-50%)}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+.menubtn{display:none}
+@media (max-width:1100px){
+  .planner{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sidecol{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr}
+  .members{grid-template-columns:1fr}
+  .detail{position:static}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 16px}
+  .brand{padding:0 6px;font-size:20px}.brand small{display:none}
+  .nav{width:auto}.side .status{margin-left:auto}
+  .main{padding:20px 16px 50px}
+  .planner{grid-template-columns:1fr 1fr}
+  .sidecol{grid-template-columns:1fr}
+  .list .lhead{display:none}
+  .row{grid-template-columns:1fr auto}.row .tin{display:none}
+}
+@media (max-width:480px){.planner{grid-template-columns:1fr}}
+
+/* lock screen */
+.lock{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:20;padding:20px}
+.lock-card{width:100%;max-width:340px;text-align:center}
+.lock-card .brand{padding:0 0 22px;justify-content:center}
+.lock-card form{display:flex;flex-direction:column;gap:12px}
+.lock-card input{border:1.5px solid var(--line);border-radius:10px;padding:13px 14px;font-size:18px;text-align:center;letter-spacing:.3em;background:var(--surface)}
+.lock-card input:focus{outline:none;border-color:var(--accent)}
+.lock-card .err{color:#C0392B;font-size:13px;min-height:18px;font-weight:600}
+.lock-card .conf{margin-top:22px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.side .conf{margin:0 0 14px;padding:0 10px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);opacity:.75}
+[hidden]{display:none!important}
+</style>
+
+</head>
+<body>
+<div class="lock" id="lock">
+  <div class="lock-card">
+    <div class="brand">HRAP Desk</div>
+    <form id="lock-form">
+      <input id="lock-pw" type="password" inputmode="numeric" placeholder="Password" autocomplete="off" autofocus>
+      <p class="err" id="lock-err"></p>
+      <button class="btn primary" type="submit">Unlock</button>
+    </form>
+    <p class="conf">Property of Elijah only · Confidential</p>
+  </div>
+</div>
+
+<div class="app" id="app" hidden>
+  <aside class="side">
+    <div class="brand">HRAP Desk<small>Secretariat</small></div>
+    <p class="conf">Property of Elijah only · Confidential</p>
+    <button class="nav active" id="nav-dash" data-page="dash">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>Dashboard
+    </button>
+    <button class="nav" id="nav-members" data-page="members">
+      <svg viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><path d="M9 21v-6h6v6M9 11h.01M15 11h.01"/></svg>HRAP Members
+    </button>
+    <div class="status"><span class="dot" id="dot"></span><span id="status-text">Saving in this browser</span></div>
+  </aside>
+
+  <main class="main">
+    <!-- DASHBOARD -->
+    <section class="page active" id="page-dash">
+      <div class="head">
+        <div>
+          <h1>Weekly Planner</h1>
+          <p id="today-line"></p>
+        </div>
+        <div class="weekbar">
+          <button class="iconbtn" id="prev-week" title="Previous week"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <span class="range" id="week-range"></span>
+          <button class="iconbtn" id="next-week" title="Next week"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="btn ghost" id="this-week">This week</button>
+        </div>
+      </div>
+      <div class="planner" id="planner"></div>
+      <p class="hint">Tip: type a time like 9:30 or 2pm in the small box to tag the entry with a time. Press Enter to add.</p>
+      <p class="hint">Format: time, company, department, description, collection or deliver.</p>
+    </section>
+
+    <!-- MEMBERS -->
+    <section class="page" id="page-members">
+      <div class="head">
+        <div>
+          <h1>HRAP Members</h1>
+          <p id="member-count"></p>
+        </div>
+        <button class="btn primary" id="add-member">+ Add member</button>
+      </div>
+      <div class="toolbar">
+        <label class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input id="q" type="search" placeholder="Search company, registered name, TIN, or address" autocomplete="off">
+        </label>
+        <select id="filt" class="btn" title="Show">
+          <option value="all">All members</option>
+          <option value="complete">Complete details</option>
+          <option value="missing">Missing details</option>
+        </select>
+      </div>
+      <div class="chips" id="chips"></div>
+      <div class="members">
+        <div class="list">
+          <div class="lhead"><span>Company</span><span>TIN</span><span>Details</span></div>
+          <div id="rows"></div>
+        </div>
+        <div class="detail" id="detail"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const SEED = [{"company": "ACACIA HOTEL MANILA", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m001"}, {"company": "AIM CONFERENCE CENTER", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m002"}, {"company": "ALOHA HOTEL4", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m003"}, {"company": "AZUMI BOTIQUE HOTEL", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m004"}, {"company": "BAYVIEW PARK HOTEL", "registered": "BAYVIEW PARK HOTEL", "tin": "001-160-778-000", "address": "1118 ROXAS B;VD. COR. UN AVENUEW ERMITA MANILA 1004", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m005"}, {"company": "BELMONT HOTEL MANILA", "registered": "BELMONT NEWPORT LUXURY HOTELS, INC", "tin": "008-973-973-0000", "address": "NEWPORT BLVD. NEWPORT CITY BRGY 183 PASAY CITY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m006", "secretary": "Ms. Venus Arroyo"}, {"company": "CONRAD MANILA", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m007", "secretary": "Ms. Jeziel Uy"}, {"company": "DIAMOND HOTEL PHILIPPINES", "registered": "DIAMOND HOTEL PHILIPPINES", "tin": "000-865-409-000", "address": "ROXAS BLVD CORNER DR. QUINTOS ST. MANILA", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m008"}, {"company": "DISCOVERY PRIMEA", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m009"}, {"company": "DISCOVERY SUITES", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m010", "secretary": "Ms. Rowena Gulle"}, {"company": "DUSIT THANI MANILA", "registered": "DUSIT THANI PHILIPPINES INC.", "tin": "000-487-652-000", "address": "AYALA CENTER MAKATI CITY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m011"}, {"company": "EDSA SHANGRILA MANILA", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m012"}, {"company": "EUROTEL HOTEL", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m013"}, {"company": "GREEN SUN HOTEL MANGAMENT, INC", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m014"}, {"company": "HOLIDAY INN & SUITES MAKATI", "registered": "GREEN HAVEN PROPERTY VENTURES INC.", "tin": "007-075-704-001", "address": "PALM DRIVE AYALA CENTER MAKATI CITY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m015"}, {"company": "HOTEL LUCKY CHINATOWN", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m016", "secretary": "Ms. Martina Matutina"}, {"company": "HOTEL REMBRANDT", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m017"}, {"company": "JOY NOSTALG HOTEL & SUITE MANILA", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m018", "secretary": "Ms. Alyssa Punzalan"}, {"company": "KABAYAN HOTEL", "registered": "LEGEND HOTELS INTERNATIONAL CORPORATION", "tin": "001-218-911-00006", "address": "2878 ZAMORA ST. BRGY. 97 PASAY CITY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m019"}, {"company": "LUB-D HOTEL", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m020", "mobile": "09088221727"}, {"company": "LANSON PLACE MALL OF ASIA, MANILA", "registered": "SM PRIME HOLDINGS INC.", "tin": "003-058-00161", "address": "LANSON PLAZA MALL OF ASIA, MANILA BLOCK 12 PALM COAST AVE. CORNER SEASIDE BLVD. MALL OF ASIA BGRY T6 PASAY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m021"}, {"company": "LUXENT HOTEL", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m022"}, {"company": "MARRIOT MANILA HOTEL", "registered": "TRAVELLERS INTERNATIONAL HOTELGROUP INC", "tin": "246-099-058-001", "address": "2 RESORT DRIVE WORLD RESORRT BRGY 183 1309 CITY OF PASAY NCR", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m023"}, {"company": "MAKATI DIAMOND RESIDENCE", "registered": "SMPI MAKATI FLAGSHIP REALTY INC", "tin": "007-108-378-000", "address": "118 LEGASPI ST. LEGASPI VILLAGE, MAKATI CITY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m024"}, {"company": "MANILA GRAND OPERA HOTEL", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m025"}, {"company": "NEW COAST HOTEL MANILA", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m026", "secretary": "Ms. Julie Ann Peji"}, {"company": "NOVOTEL MANILA ARANETA CITY", "registered": "ARANETA HOTELS INC.", "tin": "006-875-858-000", "address": "25TH-26TH FLR. GATEWAY TOWER, ARANETA CITY CUBAO, QUEZON CITY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m027", "secretary": "Ms. Sheila Bautista"}, {"company": "OKADA MANILA", "registered": "TIGER RESORT LEISURE AND ENTERTAINMENT INC.", "tin": "007-054-586-00000", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m028"}, {"company": "PHINMA MICROTEL HOTEL INC", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m029"}, {"company": "RAMADA BY WINDHAM MANILA CENTRAL", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m030"}, {"company": "SHERATON MANILA BAY", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m031"}, {"company": "SHERATON MANILA HOTEL", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m032"}, {"company": "SOLAIRE RESORT AND CASINO", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m033", "secretary": "Ms. Princess Valencia", "mobile": "09985861320"}, {"company": "SOLAIRE RESORT NORTH", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m034"}, {"company": "THE ALPHA SUITES, INC.", "registered": "", "tin": "010-035-611-0000", "address": "7232 AYALA AVE EXT. COR. MALUGOY ST. MAKATI CITY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m035"}, {"company": "THE BAYLEAF INTRAMUROS", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m036", "mobile": "09178795065"}, {"company": "THE HERITAGE HOTEL MANILA", "registered": "THE HERITAGE HOTEL MANILA", "tin": "000-460-602-000", "address": "EDSA CORNER ROXAS BLVD. PASAY CITY", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m037"}, {"company": "THE MANILA HOTEL", "registered": "MANILA HOTEL CORPORATION", "tin": "000-344-522-000", "address": "ONE RIZAL PARK, MANILA", "group": "Metro Manila Hotel", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m038", "secretary": "Ms. Charmaine Baltazar", "mobile": "09506760903"}, {"company": "WATERFRONT MANILA HOTEL & CASINO", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m039", "secretary": "Ms. Jireh Tayag"}, {"company": "WYNDHAM GARDEN MANILA BAY", "registered": "", "tin": "", "address": "", "group": "Metro Manila Hotel", "source": "DEETS SERV INV", "id": "m040"}, {"company": "THE BELLEVUE MANILA/RESORT", "registered": "", "tin": "", "address": "", "group": "Chain Hotel Members", "source": "DEETS SERV INV", "id": "m041"}, {"company": "THE B HOTEL QUEZON CITY", "registered": "", "tin": "", "address": "", "group": "Chain Hotel Members", "source": "DEETS SERV INV", "id": "m042", "secretary": "Ms. Maricar Lontok", "mobile": "09178746639"}, {"company": "THE B HOTEL ALABANG", "registered": "", "tin": "", "address": "", "group": "Chain Hotel Members", "source": "DEETS SERV INV", "id": "m043"}, {"company": "THE BELLEVUE RESORT BOHOL", "registered": "", "tin": "", "address": "", "group": "Chain Hotel Members", "source": "DEETS SERV INV", "id": "m044", "secretary": "Ms. Maricar Lontok", "mobile": "09178746639"}, {"company": "CITY IF DREAMS MANILA", "registered": "MELCO RESORT LEISURE (PHP) CORP.", "tin": "008-362-871-000", "address": "ASEAN AVE. COR. ROXXAS BLVD. BRGY. TAMBO PARANAQUE", "group": "Chain Hotel Members", "source": "DEETS SERV INV + NAIA DETAILS", "id": "m045"}, {"company": "EUROTEL GROUP OF HOTELS", "registered": "", "tin": "", "address": "", "group": "Chain Hotel Members", "source": "DEETS SERV INV", "id": "m046", "mobile": "09272374438"}, {"company": "TRANSWAY HOTEL GROUP CORP.", "registered": "", "tin": "", "address": "", "group": "Chain Hotel Members", "source": "DEETS SERV INV", "id": "m047", "mobile": "09154874124"}, {"company": "AMBASSADOR IN OARADISE RESORT CORP.", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m048", "mobile": "09981797846"}, {"company": "BAGUIO COUNTRY CLUB", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m049", "secretary": "Ms. Lani Licudine", "mobile": "09088601885"}, {"company": "BAI HOTEL CEBU", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m050", "mobile": "09175832111"}, {"company": "BATAAN WHITE CORALS BEACH RESORT", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m051", "mobile": "09177930073"}, {"company": "BEST WESTERN PLUS METRO CLARK", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m052"}, {"company": "DEVELOPMENY ACADEMY OF THE PHILIPPINES", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m053", "secretary": "Mr. Mark Nicko Salamat"}, {"company": "GARDEN ORCHID HOTEL", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m054", "secretary": "Ms. Jaymie Fernando", "mobile": "09177120588"}, {"company": "GRAND MENSENG HOTEL", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m055", "mobile": "09177022988"}, {"company": "HOTEL DON FELIPE", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m056"}, {"company": "HOTEL SAVANO", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m057"}, {"company": "LA CASA BLANCA DE VIGAN HOTEL", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m058"}, {"company": "LA MAJA RICA HOTEL", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m059", "secretary": "Ms. Estrellita N. Budomo"}, {"company": "LE SOLEIL DE BORACAY HOTEL", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m060", "secretary": "Ms. Cathy Iglesia"}, {"company": "ORMOC VILLA HOTEL", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m061"}, {"company": "QUEEN MARGARETTE HOTEL, INC", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m062"}, {"company": "THE ORCHARD HOTEL BAGUIO", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m063"}, {"company": "TAGAYTAY VIEWPARK HPOTEL INC.", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m064", "mobile": "09272377497"}, {"company": "WATERFRONT AIRPORT HOTEL & CASINO", "registered": "", "tin": "", "address": "", "group": "Provincial Hotels", "source": "DEETS SERV INV", "id": "m065"}, {"company": "ARISTOCRAT RESTAURANT", "registered": "", "tin": "", "address": "", "group": "Metro Manila Restaurant", "source": "DEETS SERV INV", "id": "m066", "mobile": "09175432854"}, {"company": "GERRY'S GRILL", "registered": "", "tin": "", "address": "", "group": "Metro Manila Restaurant", "source": "DEETS SERV INV", "id": "m067"}, {"company": "ILUSTRADO RESTAURANT", "registered": "", "tin": "", "address": "", "group": "Metro Manila Restaurant", "source": "DEETS SERV INV", "id": "m068", "mobile": "09178412858"}, {"company": "MAMA LOU'S ITALIAN KITCHEN", "registered": "", "tin": "", "address": "", "group": "Metro Manila Restaurant", "source": "DEETS SERV INV", "id": "m069", "mobile": "09988457095"}, {"company": "TAMAYO'S GROUP OF COMPANIES", "registered": "", "tin": "", "address": "", "group": "Metro Manila Restaurant", "source": "DEETS SERV INV", "id": "m070", "secretary": "Ms. Neth Obsiana", "mobile": "09175339438"}, {"company": "VIA MARE CORPORATION", "registered": "", "tin": "", "address": "", "group": "Metro Manila Restaurant", "source": "DEETS SERV INV", "id": "m071", "secretary": "Ms. Jeddah San Agustin"}, {"company": "BACOLOD CHICKEN INASAL", "registered": "", "tin": "", "address": "", "group": "Chain Restaurant", "source": "DEETS SERV INV", "id": "m072", "mobile": "09178137932"}, {"company": "DEGUSTATION CORP. (CYMA GREEK)", "registered": "", "tin": "", "address": "", "group": "Chain Restaurant", "source": "DEETS SERV INV", "id": "m073", "secretary": "Ms. Renalyn Balagtas", "mobile": "09176341734"}, {"company": "LJC RESTAURANT GROUP", "registered": "", "tin": "", "address": "", "group": "Chain Restaurant", "source": "DEETS SERV INV", "id": "m074", "mobile": "09175522788"}, {"company": "TRAVELLERS INTL HOTEL GROUP", "registered": "", "tin": "", "address": "", "group": "Chain Restaurant", "source": "DEETS SERV INV", "id": "m075", "mobile": "09178728192"}, {"company": "CHAD'S CAFÉ BAR & GRILL", "registered": "", "tin": "", "address": "", "group": "Provincial Restaurant", "source": "DEETS SERV INV", "id": "m076"}, {"company": "DREDLAND GARDEN FUNCTION HALL & RESTAURANT", "registered": "", "tin": "", "address": "", "group": "Provincial Restaurant", "source": "DEETS SERV INV", "id": "m077"}, {"company": "SEAFRONT SEPO GRILL AND RESTAURANT", "registered": "", "tin": "", "address": "", "group": "Provincial Restaurant", "source": "DEETS SERV INV", "id": "m078"}, {"company": "ARELLANO UNIVERSITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m079", "secretary": "Ms. Irish Villamor"}, {"company": "ASIA PACIFIC COLLEGE", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m080"}, {"company": "BERNARDO COLLEGE", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m081", "secretary": "Gina Talamisan"}, {"company": "CEBU TECHNOLOGICAL UNIVERSITY (MAIN CAMPUS)", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m082"}, {"company": "CEBU TECHNOLOGICAL UNIVERSITY (SATE LITE)", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m083"}, {"company": "CENTER FOR CULINARY ARTS, MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m084"}, {"company": "CENTRO ESCOLAR UNIVERSITY - MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m085"}, {"company": "COLEGIO DE SAN JUAN DE LETRAN - CALAMBA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m086"}, {"company": "COLEGIO DE SANTO CRISTO DE BURGOS", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m087"}, {"company": "COLEGIO DE SAN JUAN DE LETRAN - INTRAMUROS", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m088"}, {"company": "COLEGIO DE SANTA CATALINA DE ALEJANDRIA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m089"}, {"company": "DE LA SALLE LIPA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m090", "secretary": "Ms. Carolyn Basconcillo"}, {"company": "DMC COLLEGE FOUNDATION, INC.", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m091"}, {"company": "DE LA SALLE - COLLGE OF SAINT BENILDE", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m092"}, {"company": "DE LA SALLE UNIVERSITY - DASMA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m093"}, {"company": "DE OCAMPO MEMORIAL COLLEGE, INC.", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m094"}, {"company": "DR. YANGA'S COLLEGE, INC", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m095"}, {"company": "EMILIO AGUINALDO COLLEGE - MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m096", "secretary": "Mr. Jovery Jaime Perocho, Jr.", "mobile": "09985782498"}, {"company": "EUGOLIO 'AMANG' RODRIGUEZ INSTITUE OF SCIENCE & TECHNOLOGY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m097"}, {"company": "FAR EASTERN UNIVERSITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m098"}, {"company": "HOLY ANGEL UNIVERSITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m099", "secretary": "Ms. Randyrose Cunanan"}, {"company": "HOLY TRINITY UNIVERSITU", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m100"}, {"company": "ICCT COLLEGES FOUNDATION, INC.", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m101"}, {"company": "JOJI ILAGAN INTERNATIONAL SCHOOLS", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m102"}, {"company": "JOSE RIZAL UNIVERSITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m103"}, {"company": "LA CONSOLACION COLLEGE - CALOOCAN", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m104"}, {"company": "LA CONSOLACIONCOLLEGE - DAET", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m105"}, {"company": "LA CONSOLACION COLLEGE MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m106"}, {"company": "LA CONSOLACION UNIVERSITY PHILIPPINES", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m107"}, {"company": "LYCEUM OF THE PHILIPPINES - BATANGAS", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m108"}, {"company": "LYCEUM OF THE PHILIPPINES UNIVERISTY - CAVITE", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m109"}, {"company": "LYCEUM OF THE PHILIPPINES - LAGUNA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m110"}, {"company": "LYCEUM OF THE PHILS. UNIVERSITY - MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m111", "secretary": "Ms. Faye Mae Mendeja"}, {"company": "MALAYAN COLLEGES LAGUNA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m112"}, {"company": "MAPUA UNIVERSITY - SCHOOL OF TOURISM", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m113"}, {"company": "NATIONAL UNIVERSITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m114"}, {"company": "OLIVAREZ COLLEGE", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m115"}, {"company": "OUR LADY OF FATIMA UNIVERSITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m116"}, {"company": "PERPETUAL HELP COLLEGE - MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m117"}, {"company": "PAMANTASAN NG LUNGSOD NG PASIG", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m118"}, {"company": "PHILIPPINE CHRISTIAN UNIVERSITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m119"}, {"company": "PHILIPPINE CULTURAL COLLEGE", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m120"}, {"company": "PHILIPPINE WOMEN'S COLLEGE OF DAVAO", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m121"}, {"company": "PHILIPPINE WOMEN'S UNIVERSITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m122"}, {"company": "POLYTECHNIC UNIVERSITY OF THE PHILIPPINES", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m123"}, {"company": "PUNLAAN SCHOOL", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m124"}, {"company": "SAN SEBASTUAN COLLEGE - RECOLETOS MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m125", "mobile": "09358266862"}, {"company": "SANTA ISABEL COLLEGE OF MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m126"}, {"company": "SAINT MICHAEL'S COLLEGE OF LAGUNA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m127"}, {"company": "SIENA COLLEGE, INC.", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m128", "secretary": "Ms. Sandra Mayag-as"}, {"company": "SIENA COLLEGE OF TAYTAY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m129", "secretary": "Ms. Jho Regencia"}, {"company": "SOUTHEAST ASIAN COLLEGE INC.", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m130"}, {"company": "SOUTHVILLE INT'L SCHOOL ADDILIATED WITH FOREIGN UNIVERSITIES", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m131", "secretary": "Ms. Jennylyn Bebing"}, {"company": "ST. ANNE COLLEGE OF LUCENA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m132"}, {"company": "ST.PAUL UNIVERSITY MANILA", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m133", "secretary": "Ms. Jewel Deorayom"}, {"company": "ST.PAUL UNIVERSITY QUEZON CITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m134", "secretary": "Ms. Sandra Mayag-as"}, {"company": "ST.SCHOLASTICA.S COLLEGE", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m135"}, {"company": "ST, THERESE MTC COLLEGES", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m136"}, {"company": "THE NATIONAL TEACHERS COLLEGE", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m137"}, {"company": "THE UNIVERISTY OF MINDANAO MAIN CAMPUS", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m138", "secretary": "Ms. Diana Bajo"}, {"company": "UNIVERSITY OF BAGUIO", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m139"}, {"company": "UNIVERSITY OF BATANGAS- BATANGAS CITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m140", "secretary": "Ms. Daisy Ilagan"}, {"company": "UNIVERSITY OF BATANGAS- LIPA CITY", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m141", "secretary": "Ms. Daisy Ilagan"}, {"company": "UNIVERSITY OF THE EAST", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m142"}, {"company": "UNIVERSITY OF NEGROS OCCIDENTAL RECOLETOS", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m143"}, {"company": "UNIVERSITY OF SANTO TOMAS", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m144"}, {"company": "UNIVERSITY OF THE PHILIPPINES", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m145", "secretary": "Ms. Kristine Q. Telen", "mobile": "09285030334"}, {"company": "WEST BAY COLLEGES, INC.", "registered": "", "tin": "", "address": "", "group": "Associate Member", "source": "DEETS SERV INV", "id": "m146", "secretary": "Ms. Mary Grace Alonso"}, {"company": "168 CORBELT INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m147"}, {"company": "1SC GROUP OPC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m148", "secretary": "Ms. Maxine Pangilinan", "mobile": "09175281083"}, {"company": "AIC GROUP OF COMPANIES HOLDING CORP,", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m149", "mobile": "091718446021"}, {"company": "AJINOMOTO PHILS CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m150"}, {"company": "ALLIED METALS, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m151", "secretary": "Ms. Janice R. Sengco", "mobile": "09338670867"}, {"company": "ALL-LINK AIR & SEA PHILIPPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m152", "mobile": "09171191172"}, {"company": "ALOG & COMPANY, INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m153", "mobile": "09178332564"}, {"company": "ALOGIS ARTICO, INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m154"}, {"company": "AKMK MEATPRO CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m155"}, {"company": "ARCHIANS HOSPITALITY GUILD TRAINING CONSULTANCY SERVICES", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m156"}, {"company": "BRIDGEMERI CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m157"}, {"company": "CAREER OPPORTUNITIES CONSULTING INT'L CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m158", "mobile": "09178592106"}, {"company": "CENTURY PACIFIC FOOD, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m159", "mobile": "09985922427"}, {"company": "CONSISTEN FROZEN SOLUTIONS", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m160"}, {"company": "CONSILIDATED PACKAGING ENTERPRISE", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m161", "mobile": "09060246396"}, {"company": "CSF ENTERPRISE", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m162", "mobile": "09988476144"}, {"company": "CP HOSPITALITY", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m163"}, {"company": "CWS PHILIPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m164"}, {"company": "DAFFID INDUSTRIES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m165"}, {"company": "DAPITAN PAORCELAIN HOUSE", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m166"}, {"company": "DAVIES PAINTS PHILIPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m167", "mobile": "09178779302"}, {"company": "DIMAX FOOD WHOLESALING", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m168"}, {"company": "EASTERN COMMUNICATIONS", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m169"}, {"company": "EASTWORLD SALES PHILS.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m170", "mobile": "09173678982"}, {"company": "ECOLOGICAL SOLID WASTE SOLUTIONS, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m171", "secretary": "Ms. Rej", "mobile": "09953877409"}, {"company": "EMPERADOR DISTILLERS, INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m172", "secretary": "Ms. Allen Deraco", "mobile": "09178104734"}, {"company": "EPTA REFRIGIRATIONS PHILS., INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m173", "mobile": "09088197615"}, {"company": "EVENTUROUS EVENTS ORGANIZING SERVICES", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m174", "mobile": "09152492205"}, {"company": "EXCELLENCE APPLIANCE TECHNOLOGIES INC. (EXATECH)", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m175"}, {"company": "FILTRA TIMBER", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m176", "mobile": "09177081346"}, {"company": "GOERGE STEUARTS PHILS.,INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m177", "mobile": "09178062388"}, {"company": "GLOBAL-LINK MP MP EVENTS INTERNATIONAL, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m178"}, {"company": "GLOBALINENS WORLDWIDE, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m179"}, {"company": "GLOBAL PACIFIC DISTRUBUTION NETWORK CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m180"}, {"company": "GOLDEN ARM ELITE SECURITY AGENCY, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m181"}, {"company": "GOMECO METAL CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m182", "mobile": "09175368854"}, {"company": "GOODWAY INDUSTRIAL SERVICES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m183"}, {"company": "GUARD-ALL ELECTRONIC SECURITY SYSTEMS INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m184"}, {"company": "HAIG & LEE IMPORT EXPORT CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m185", "secretary": "Ms. Patricia Ruiz"}, {"company": "HARLE PHILIPPINES", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m186", "secretary": "Ms. Noemie Rapiz"}, {"company": "HOCHENG PHILIPPINES CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m187"}, {"company": "HOSPECO PHILIPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m188"}, {"company": "HOTEL AND SPA ESSENTIALS, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m189"}, {"company": "HR INTERNATIONAL, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m190"}, {"company": "INTERNATIONAL SCHOOL FOR CULINARY ARTS & HOTEL MANAGEMENT (ISCAHM)", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m191"}, {"company": "INTERNATIONAL RICE RESEARCH INSTITUE (IRRI)", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m192"}, {"company": "INTEXPRO, INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m193"}, {"company": "INTERNATIONAL INDUSTRY PARTNERS, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m194"}, {"company": "ISLAND AIR PRODUCT CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m195"}, {"company": "KAI ANYA FOOD INT'L CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m196"}, {"company": "KITCHEN BEAUTY MARKETING CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m197"}, {"company": "KLG INTERNATIONAL, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m198", "secretary": "Ms. Jennifer Capco"}, {"company": "LINCON MANUFACTURING PHILS. INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m199", "secretary": "Ms. Wauie Coi"}, {"company": "LKL GLOBAL TECHNOLOGIES INK (LOKAL)", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m200"}, {"company": "MAX IDEAS MARKETING CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m201", "secretary": "Ms. Leslie Ann R. Bariso"}, {"company": "MCCORMICK PHILIPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m202", "mobile": "09267789392"}, {"company": "MEDIA DISPLAY SOLUTIONS", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m203", "secretary": "Ms. Elaiza Cayetano", "mobile": "09175824115 / 09988432970"}, {"company": "MEGA INTEL MANPOWER MANAGEMENT, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m204", "mobile": "09209286830"}, {"company": "MERIT STAINLESS STEEL, INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m205", "secretary": "Ms. Merita N. Yu"}, {"company": "METFOOD CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m206", "mobile": "09195451402"}, {"company": "MORELIA TOURS AND TRAVEL, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m207", "mobile": "09215410900"}, {"company": "MIDA FOOD DISTRIBUTORS, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m208", "secretary": "Ms. Sam Lipana", "mobile": "09176303422"}, {"company": "MULTIFLEX RNC PHILS. INC - URATEX", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m209"}, {"company": "NAB TRADING CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m210", "secretary": "Ms. Jing Lucena"}, {"company": "NEXTEDGE ENTERPRISES OPC", "registered": "", "tin": "010-894-866-00000", "address": "BLK 20 LOT 39 MANGO DRIVE THE ORCHARD SALITRAN IV 4114 DASMARINAS CITY", "group": "Allied", "source": "DEETS SERV INV", "id": "m211"}, {"company": "OLEO-FATS INCORPORATED", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m212", "mobile": "09499927985"}, {"company": "ONE HOLIDAY TRAVEL & TOURS OPC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m213", "mobile": "09171320002"}, {"company": "PASADENA AGRIVENTURES CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m214"}, {"company": "PEOTRACO FOOD, INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m215"}, {"company": "PEPTARSUS CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m216", "secretary": "Ms. Jolyn Enrile"}, {"company": "PERFORM MANAGEMENT CONSULTANCY, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m217"}, {"company": "PHILIPPINE TRANSMARINE CARRIERS, INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m218"}, {"company": "PHOENIX LPG PHILIPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m219"}, {"company": "PL AGUILA MANUFACTURING, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m220", "secretary": "Ms. Sandra Daroy"}, {"company": "PMFTC INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m221"}, {"company": "PRIME PACIFIC FOODS CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m222"}, {"company": "Q TATLO AURELIA PHILIPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m223"}, {"company": "RAMP-S CORP", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m224"}, {"company": "RAV BROS FRUITES AND VEGETABLES WHOLESALING", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m225"}, {"company": "RENTOKIL INITIAL PHILIPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m226"}, {"company": "SANFORD CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m227"}, {"company": "SERTA PHILIPPINES", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m228"}, {"company": "SERVA HOREISA SUPPLIES INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m229"}, {"company": "SERVO IT SOLUTIONS", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m230"}, {"company": "SGS PHILIPPINES, INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m231", "secretary": "Ms. Eden Estolano"}, {"company": "SILK EVENTS MANAGEMENT", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m232"}, {"company": "SODEXO ON-SITE SERVICES PHILIPPINES, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m233"}, {"company": "SOFTYPE PHILIPPINES", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m234", "mobile": "09177160846"}, {"company": "STREAMLINE DESIGN SOLUTIONS", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m235"}, {"company": "SYCIP GORRES VELAYO & CO.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m236", "secretary": "Ms. Floriza M. Villegas-Jereza"}, {"company": "THE ONLY DEWFOAM CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m237"}, {"company": "TKHS GROUP, INC.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m238"}, {"company": "TOSOT PHILIPPINES CORP", "registered": "", "tin": "008-940-845-000", "address": "2162 F.B HORRISON ST. SAN JOSE PASAY CITY PHILS.", "group": "Allied", "source": "DEETS SERV INV", "id": "m239"}, {"company": "TRADENET EVENTS MANAGEMENT INT'L", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m240"}, {"company": "UNITEC PIPE MANUFACTURING CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m241"}, {"company": "VCP TRADING INTERNATIONAL CORP.", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m242", "mobile": "09189425321"}, {"company": "VIVENTIS SEARCH ASIA", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m243"}, {"company": "WEDDING SUPPLIERS ASSOCIATION OF OF THE PHILS", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m244"}, {"company": "WINE CENTURY BROTHERS PHILS INC", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m245"}, {"company": "YATAI INTERNATIONAL CORPORATION", "registered": "", "tin": "", "address": "", "group": "Allied", "source": "DEETS SERV INV", "id": "m246"}, {"company": "ACCOMODATIONS ESTABLISHMENT SECURITY & SAFETY COORDINATION COUNCIL, INC. (AESSCCI)", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m247", "mobile": "09175758200"}, {"company": "ASSOCIATION OF HUMAN RESOURCES MANAGERS (AHRM)", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m248"}, {"company": "ASSOCIATION OF HOTEL & RESTAURANT FINANCIAL OFFICERS OF THE PHILIPPINES, INC. (AHARFOPHIL)", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m249"}, {"company": "COUNCIL OF HOTEL & RESTAURANT EDUCATIONS OF THE PHILIPPINES (COHREP)", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m250", "secretary": "Mr. Rudie E. Cabardo", "mobile": "09159394639"}, {"company": "EXECUTIVE HOUSEKEEPERS ASSOCIATION OF THE PHILIPPINES (EHAP)", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m251", "secretary": "Ms. Marianne Tirona"}, {"company": "HOTEL & RESTAURANT CHEF'S ASSOCIATION OF THE PHILIPPONES (HRCAP)", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m252", "mobile": "09165054316"}, {"company": "JUNIOR TOURISM AND HOSPITALITY MANAGEMENT ASSOCIATION OF THE PHILIPPINES (JTHMAP)", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m253", "mobile": "09173401151"}, {"company": "PHILIPPINE BARTENDERS LEAGUE, INC.", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m254", "mobile": "09610124985"}, {"company": "HOSPITALITY AND TOURISM COUNCIL OF DEANS, CHED-NCR INC.", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m255"}, {"company": "ASSOCIATION OF ADMINISTRATORS IN HOSPITALITY HOTEL AND RESTAURANT MANAGEMENT EDUCATIONAL INSTITUTIONS (AAHRMEI)", "registered": "", "tin": "", "address": "", "group": "Affiliates", "source": "DEETS SERV INV", "id": "m256", "mobile": "9286108941"}, {"company": "BOHOL ASSOCIATION OF HOTEL RESORTS & RESTAURANT", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m257", "secretary": "Ms. Nina Fatima Bermoy", "mobile": "09152335810"}, {"company": "CAGAYAN DE ORO HOTEL & REST. ASSOCIATION (COHARA)", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m258", "secretary": "Ms. Nollie S. Arguelles", "mobile": "09176700517 /09754746263"}, {"company": "DAVAO TOURISM ASSOCIATION (DATA)", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m259", "secretary": "Ms. Pierri Marie Jara", "mobile": "09177020621"}, {"company": "HOTEL & RESTAURANT ASSO. OF BAGUIO (HRAB)", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m260", "secretary": "Ms. Lani Licudine", "mobile": "09088601885"}, {"company": "HOTEL & RESTAURANT ASSOCIATION OF NEGROS OCCIDENTAL (HRANO)", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m261", "mobile": "09189212377"}, {"company": "HOTEL RESORT & RESTAURANT ASSOCIATION OF CEBU, INC. (HRRACI)", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m262"}, {"company": "HARRP ASSOCIATION IN PAMPANGA, INC.", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m263", "secretary": "Mr. Edward Patawaran", "mobile": "09152833965"}, {"company": "ILOCOS SUR HOSPITALITY AND RELATED ESTABLISHMENT", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m264"}, {"company": "ILOILO HOTEL, RESORT AND RESTAURANTASSOCIATION (IHRRA)", "registered": "", "tin": "", "address": "", "group": "Chapters", "source": "DEETS SERV INV", "id": "m265", "secretary": "Ms. Teresita Alcolia", "mobile": "09088954818"}, {"company": "CRIMSON HOTEL FILINVEST CITY, MANILA", "registered": "ENTRATA HOTEL SERVICES INC", "tin": "008-427-035-00000", "address": "ENTRATA URBAN COMPLEX 2609 CIVIC DRIVE FILINVEST CITY ALABANG MUNTINLUPA", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m269"}, {"company": "GRAND HYATT MANILA", "registered": "BONIFACIO LANDMARK CORPORATION", "tin": "", "address": "", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m272"}, {"company": "HOTEL OKURA", "registered": "TRAVELLERS INTERNATIONAL HOTEL GROUP, INC.", "tin": "246-099-058-038", "address": "2 PORTWOOD NEWPORT CITY PASAY CITY", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m274"}, {"company": "SCOTTS PHILIPPINES, INC. - (ASCOTT MAKATI)", "registered": "SCOTTS PHILIPPINES, INC", "tin": "004-514-531-000", "address": "ASCOTT MAKATI GLORIETTA 4, AYALA CENTER, MAKATI CITY", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m278"}, {"company": "SCOTTS PHILIPPINES, INC. - (BGC)", "registered": "WORLD LIFESTYLE OPERATION INC.", "tin": "006-939-054-001", "address": "2ND FLR ASCOTT BLDG. 5TH AVE AND 20TH ST. BGC FORT BONIFACIO TAGUIG CITY", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m279"}, {"company": "THE BELLEVUE HOTELS & RESORTS", "registered": "", "tin": "", "address": "", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m282"}, {"company": "MAKATI SHANGRI-LA HOTEL AND RESORT, INC.", "registered": "MAKATI SHANGRI-LA HOTEL AND RESORT INC.", "tin": "000-662-632-00000", "address": "AYALA AVENUE. COR. MAKATI AVE. SAN LORENZO 1223 CITY OF MAKATI, FOURTH DISTRICT, PHILIPPINES", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m286", "secretary": "Ms. Maria Elena C. Agdeppa"}, {"company": "MARCO POLO ORTIGAS MANILA", "registered": "", "tin": "", "address": "", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m288"}, {"company": "MIDAS HOTEL & CASINO (HOTEL ENT.OF THE PHILS.,INC.)", "registered": "", "tin": "", "address": "", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m289"}, {"company": "NEW WORLD HOTEL MAKATI", "registered": "ALI MAKATI HOTEL AND RESIDENCE, INC.", "tin": "006-610-401-00001", "address": "NEW WORLD MAKATI HOTEL, ESPERANZA ST. COR. MAKATI AVE. AYALA CENTER, SAN LORENZO, MAKATI CITY", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m290"}, {"company": "RAFFLES & FAIRMONT HOTELS", "registered": "ALI MAKATI HOTEL PROPERTY, INC.", "tin": "006-817-166-000", "address": "1 RAFFLE DRIVE, MAKATI AVE, MAKATI CITY", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m293"}, {"company": "SAVOY HOTEL MANILA", "registered": "SAVOY HOTEL MANILA INC.", "tin": "009-911-782-000", "address": "101 ANDREWS AVE. NEWPORT CITY BRGY 1831, PASAY CITY", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m294", "secretary": "Ms. Cristine Abby Natalaray", "mobile": "09178099779"}, {"company": "THE PENINSULA MANILA", "registered": "MANILA PENINSULA HOTEL INC", "tin": "000-170-847-000", "address": "CORNER AYALA MAKATI AVE. 1226 MAKATI CITY METRO MANILA PHILIPPINES", "group": "NAIA Details", "source": "NAIA DETAILS", "id": "m298"}];
+const GROUPS = [...new Set(SEED.map(m=>m.group))];
+const DAYS = [['mon','Monday'],['tue','Tuesday'],['wed','Wednesday'],['thu','Thursday'],['fri','Friday']];
+const $ = s => document.querySelector(s);
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
+const toast = (t)=>{const el=$('#toast');el.textContent=t;el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),1600)};
+
+/* ---------- storage: cloud db when available, browser storage otherwise ---------- */
+let db=null;
+const LS = {
+  get(k){try{return JSON.parse(localStorage.getItem('hrap:'+k))}catch(e){return null}},
+  set(k,v){try{localStorage.setItem('hrap:'+k,JSON.stringify(v))}catch(e){}}
+};
+let members = [];            // array of member objects
+let weekDoc = {days:{},todo:[],notes:''};
+let weekKey = '';
+let unsubWeek = null;
+
+function setStatus(on,text){$('#dot').classList.toggle('on',on);$('#status-text').textContent=text}
+
+async function initStore(){
+  const useFn = window.claude && window.claude.use;
+  if(useFn){
+    try{ db = await window.claude.use('db'); }catch(e){ db=null; }
+  }
+  if(db){
+    setStatus(true,'Saved to cloud');
+    // members live
+    db.collection('members').onSnapshot(async snap=>{
+      if(snap.empty && !snap.metadata.fromCache && !members._seeded){
+        members._seeded = true;
+        await seedCloud();
+        return;
+      }
+      members = snap.docs.map(d=>({id:d.id,...d.data()}));
+      renderMembers();
+    }, err=>{ setStatus(false,'Cloud unavailable, showing browser copy'); loadLocal(); });
+    loadWeek();
+  }else{
+    setStatus(false,'Saving in this browser');
+    loadLocal();
+    loadWeek();
+  }
+}
+async function seedCloud(){
+  const lease = await db.doc('meta/seed').acquire({holder:uid(),ttlMs:60000});
+  if(!lease.acquired) return;
+  const flag = await db.doc('meta/seed').get();
+  if(flag.exists && flag.data().done) return;
+  for(const m of SEED){ const {id,...rest}=m; await db.doc('members/'+id).set(rest); }
+  await db.doc('meta/seed').set({done:true,at:new Date().toISOString()});
+  toast('Member list loaded');
+}
+function loadLocal(){
+  members = LS.get('members') || SEED.map(m=>({...m}));
+  renderMembers();
+}
+async function saveMember(m){
+  if(db){ const {id,...rest}=m; await db.doc('members/'+id).set(rest); }
+  else{ const i=members.findIndex(x=>x.id===m.id); if(i>=0) members[i]=m; else members.push(m); LS.set('members',members); renderMembers(); }
+}
+async function deleteMember(id){
+  if(db){ await db.doc('members/'+id).delete(); }
+  else{ members=members.filter(x=>x.id!==id); LS.set('members',members); renderMembers(); }
+}
+
+/* ---------- week ---------- */
+let cursor = new Date();
+function mondayOf(d){const x=new Date(d);x.setHours(0,0,0,0);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return x}
+function iso(d){return d.toISOString().slice(0,10)}
+function fmt(d,o){return d.toLocaleDateString('en-PH',o)}
+function loadWeek(){
+  const mon = mondayOf(cursor); weekKey = iso(mon);
+  const fri = new Date(mon); fri.setDate(mon.getDate()+4);
+  $('#week-range').textContent = `${fmt(mon,{month:'short',day:'numeric'})} to ${fmt(fri,{month:'short',day:'numeric',year:'numeric'})}`;
+  $('#today-line').textContent = `Today is ${fmt(new Date(),{weekday:'long',month:'long',day:'numeric',year:'numeric'})}`;
+  if(unsubWeek){unsubWeek();unsubWeek=null}
+  if(db){
+    unsubWeek = db.doc('planner/'+weekKey).onSnapshot(snap=>{
+      weekDoc = snap.exists ? JSON.parse(JSON.stringify(snap.data())) : {days:{},todo:[],notes:''};
+      if(!document.activeElement || document.activeElement.id!=='notes') renderPlanner();
+    });
+  }else{
+    weekDoc = LS.get('week:'+weekKey) || {days:{},todo:[],notes:''};
+    renderPlanner();
+  }
+}
+let saveT=null;
+function saveWeek(){
+  if(db){ clearTimeout(saveT); saveT=setTimeout(()=>db.doc('planner/'+weekKey).set(weekDoc).catch(()=>toast('Could not save, try again')),250); }
+  else LS.set('week:'+weekKey,weekDoc);
+}
+function parseTime(s){
+  s=(s||'').trim().toLowerCase(); if(!s) return '';
+  const m=s.match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/); if(!m) return s;
+  let h=+m[1], mi=m[2]||'00', ap=m[3];
+  if(!ap) ap = h>=7&&h<=11 ? 'am' : 'pm';
+  if(h===0) h=12; if(h>12) {h-=12; ap='pm'}
+  return `${h}:${mi} ${ap}`;
+}
+function renderPlanner(){
+  const mon = mondayOf(cursor); const todayIso = iso(mondayOf(new Date())) === weekKey ? iso(new Date()) : null;
+  const dayHtml = DAYS.map(([k,label],i)=>{
+    const d=new Date(mon); d.setDate(mon.getDate()+i);
+    const items=(weekDoc.days[k]||[]);
+    return `<div class="day ${iso(d)===todayIso?'today':''}" data-day="${k}">
+      <header><b>${label}</b><span>${fmt(d,{month:'short',day:'numeric'})}</span></header>
+      <ul class="items">${items.map(it=>`<li class="item">
+        <input class="chk" type="checkbox" ${it.done?'checked':''} data-id="${it.id}" aria-label="Done">
+        <span class="txt ${it.done?'done':''}">${it.time?`<span class="time">${esc(it.time)}</span>`:''}${esc(it.text)}${(it.contact||it.dept)?`<span class="meta">${it.contact?`<span class="tag">${esc(it.contact)}</span>`:''}${it.dept?`<span class="tag">${esc(it.dept)}</span>`:''}</span>`:''}</span>
+        <button class="del" data-id="${it.id}" title="Remove">×</button></li>`).join('')}</ul>
+      <form class="adder">
+        <div class="adder-row"><input class="t" placeholder="time" aria-label="Time"><input class="what" placeholder="Add..." aria-label="What"><button type="submit" hidden>Add</button></div>
+        <button type="button" class="more-toggle">+ contact / department</button>
+        <div class="adder-extra" hidden><input class="contact" placeholder="Contact person" aria-label="Contact person"><input class="dept" placeholder="Department" aria-label="Department"></div>
+      </form>
+    </div>`;
+  }).join('');
+  const todo = weekDoc.todo||[];
+  const side = `<div class="sidecol">
+    <div class="card" data-day="todo"><header><b>To Do List</b><span>${todo.filter(t=>t.done).length}/${todo.length} done</span></header>
+      <ul class="items">${todo.map(it=>`<li class="item">
+        <input class="chk" type="checkbox" ${it.done?'checked':''} data-id="${it.id}" aria-label="Done">
+        <span class="txt ${it.done?'done':''}">${esc(it.text)}</span>
+        <button class="del" data-id="${it.id}" title="Remove">×</button></li>`).join('')}</ul>
+      <form class="adder"><input class="what" placeholder="Add a to do..." aria-label="To do"><button type="submit" hidden>Add</button></form>
+    </div>
+    <div class="card"><header><b>Notes</b><span>this week</span></header>
+      <textarea class="notes" id="notes" placeholder="Reminders, follow ups, anything else...">${esc(weekDoc.notes||'')}</textarea>
+    </div></div>`;
+  $('#planner').innerHTML = dayHtml + side;
+}
+$('#planner').addEventListener('submit',e=>{
+  e.preventDefault();
+  const box=e.target.closest('[data-day]'); const k=box.dataset.day;
+  const what=e.target.querySelector('.what'); const t=e.target.querySelector('.t');
+  const contact=e.target.querySelector('.contact'); const dept=e.target.querySelector('.dept');
+  const text=what.value.trim(); if(!text) return;
+  const entry={id:uid(),text,done:false};
+  if(t) entry.time=parseTime(t.value);
+  if(contact && contact.value.trim()) entry.contact=contact.value.trim();
+  if(dept && dept.value.trim()) entry.dept=dept.value.trim();
+  if(k==='todo'){ (weekDoc.todo=weekDoc.todo||[]).push(entry); }
+  else { (weekDoc.days[k]=weekDoc.days[k]||[]).push(entry); }
+  saveWeek(); renderPlanner();
+  const again=$(`[data-day="${k}"] .what`); if(again) again.focus();
+});
+$('#planner').addEventListener('click',e=>{
+  const t=e.target.closest('.more-toggle'); if(!t) return;
+  const extra=t.nextElementSibling;
+  const open=extra.hasAttribute('hidden');
+  if(open){ extra.removeAttribute('hidden'); t.textContent='- hide contact / department'; }
+  else{ extra.setAttribute('hidden',''); t.textContent='+ contact / department'; }
+});
+$('#planner').addEventListener('change',e=>{
+  if(e.target.classList.contains('chk')){
+    const k=e.target.closest('[data-day]').dataset.day; const list=k==='todo'?weekDoc.todo:weekDoc.days[k];
+    const it=list.find(x=>x.id===e.target.dataset.id); if(it){it.done=e.target.checked; saveWeek(); renderPlanner();}
+  }
+});
+$('#planner').addEventListener('click',e=>{
+  const b=e.target.closest('.del'); if(!b) return;
+  const k=b.closest('[data-day]').dataset.day;
+  if(k==='todo') weekDoc.todo=weekDoc.todo.filter(x=>x.id!==b.dataset.id);
+  else weekDoc.days[k]=(weekDoc.days[k]||[]).filter(x=>x.id!==b.dataset.id);
+  saveWeek(); renderPlanner();
+});
+$('#planner').addEventListener('input',e=>{ if(e.target.id==='notes'){ weekDoc.notes=e.target.value; saveWeek(); } });
+$('#prev-week').onclick=()=>{cursor.setDate(cursor.getDate()-7);loadWeek()};
+$('#next-week').onclick=()=>{cursor.setDate(cursor.getDate()+7);loadWeek()};
+$('#this-week').onclick=()=>{cursor=new Date();loadWeek()};
+
+/* ---------- members ---------- */
+let q='', group='all', filt='all', selected=null, editing=false;
+function completeness(m){const n=[m.registered,m.tin,m.address].filter(Boolean).length;return n===3?'complete':n?'partial':'none'}
+function renderChips(){
+  const counts={}; members.forEach(m=>counts[m.group]=(counts[m.group]||0)+1);
+  const all=[['all','All'],...GROUPS.map(g=>[g,g])];
+  $('#chips').innerHTML=all.map(([v,l])=>`<button class="chip ${group===v?'active':''}" data-g="${esc(v)}">${esc(l)}${v==='all'?'':` · ${counts[v]||0}`}</button>`).join('');
+}
+$('#chips').addEventListener('click',e=>{const c=e.target.closest('.chip');if(!c)return;group=c.dataset.g;renderMembers()});
+$('#q').addEventListener('input',e=>{q=e.target.value;renderRows()});
+$('#filt').addEventListener('change',e=>{filt=e.target.value;renderRows()});
+function hi(s){ if(!q.trim()) return esc(s); const re=new RegExp('('+q.trim().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','ig'); return esc(s).replace(re,'<mark>$1</mark>'); }
+function renderMembers(){ renderChips(); renderRows(); renderDetail(); }
+function renderRows(){
+  const needle=q.trim().toLowerCase().replace(/\s+/g,' ');
+  const hits=members.filter(m=>{
+    if(group!=='all'&&m.group!==group) return false;
+    const c=completeness(m);
+    if(filt==='complete'&&c!=='complete') return false;
+    if(filt==='missing'&&c==='complete') return false;
+    if(!needle) return true;
+    const hay=[m.company,m.registered,m.tin,m.address,m.secretary,m.mobile].join(' ').toLowerCase();
+    return needle.split(' ').every(w=>hay.includes(w)) || (m.tin||'').replace(/-/g,'').includes(needle.replace(/-/g,''));
+  });
+  const ready=members.filter(m=>completeness(m)==='complete').length;
+  $('#member-count').textContent=`${members.length} companies on file, ${ready} with complete details`;
+  if(!hits.length){$('#rows').innerHTML=`<div class="empty">No matches. Try a shorter word, or add it as a new member.</div>`;return}
+  let out='',last=null;
+  hits.forEach(m=>{
+    if(group==='all'&&m.group!==last){out+=`<div class="grp">${esc(m.group)}</div>`;last=m.group}
+    const c=completeness(m);
+    out+=`<button class="row ${selected===m.id?'sel':''}" data-id="${m.id}">
+      <span class="name">${hi(m.company)}</span>
+      <span class="tin">${m.tin?hi(m.tin):'<span style="opacity:.5">none yet</span>'}</span>
+      <span><span class="pill ${c}">${c==='complete'?'Complete':c==='partial'?'Partial':'Blank'}</span></span></button>`;
+  });
+  $('#rows').innerHTML=out;
+}
+$('#rows').addEventListener('click',e=>{const r=e.target.closest('.row');if(!r)return;selected=r.dataset.id;editing=false;renderMembers();
+  if(window.innerWidth<=1100) $('#detail').scrollIntoView({behavior:'smooth',block:'start'})});
+function renderDetail(){
+  const m=members.find(x=>x.id===selected);
+  const el=$('#detail');
+  if(!m&&!editing){el.innerHTML=`<div class="empty">Pick a company from the list, or search above.<br><br>The Registered Name, TIN, and Address show up here.</div>`;return}
+  if(editing){
+    const v=m||{id:'new',company:'',registered:'',tin:'',address:'',secretary:'',mobile:'',group:GROUPS[0],source:'Added here'};
+    el.innerHTML=`<form id="edit-form"><div class="dhead"><div class="src">${m?'Edit member':'New member'}</div>
+      <div class="field"><label for="f-company">Company name</label><input id="f-company" value="${esc(v.company)}" required></div></div>
+      <div class="fields">
+        <div class="field"><label for="f-registered">Registered name</label><input id="f-registered" value="${esc(v.registered)}"></div>
+        <div class="field"><label for="f-tin">TIN number</label><input id="f-tin" value="${esc(v.tin)}" placeholder="000-000-000-000" inputmode="numeric"></div>
+        <div class="field"><label for="f-address">Registered address</label><textarea id="f-address">${esc(v.address)}</textarea></div>
+        <div class="field"><label for="f-secretary">Secretary / alternate representative</label><input id="f-secretary" value="${esc(v.secretary||'')}" placeholder="Ms. Juan Dela Cruz"></div>
+        <div class="field"><label for="f-mobile">Mobile number</label><input id="f-mobile" value="${esc(v.mobile||'')}" placeholder="0917 000 0000"></div>
+        <div class="field"><label for="f-group">Group</label><select id="f-group">${GROUPS.map(g=>`<option ${g===v.group?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
+      </div>
+      <div class="dfoot"><span></span><div class="r"><button type="button" class="btn ghost" id="cancel-edit">Cancel</button><button class="btn primary" type="submit">Save</button></div></div></form>`;
+    $('#f-company').focus();
+    return;
+  }
+  const f=(label,val,cls='')=>`<div class="field"><label>${label}</label><div class="val ${cls} ${val?'':'blank'}">${val?esc(val):'not on file'}${val?`<button class="copy" data-copy="${esc(val)}">copy</button>`:''}</div></div>`;
+  el.innerHTML=`<div class="dhead"><div class="src">${esc(m.group)} · ${esc(m.source)}</div><h2>${esc(m.company)}</h2></div>
+    <div class="fields">${f('Registered name',m.registered)}${f('TIN number',m.tin,'tin')}${f('Registered address',m.address)}${f('Secretary / alternate representative',m.secretary)}${f('Mobile number',m.mobile,'tin')}</div>
+    <div class="dfoot"><button class="btn danger" id="del-member">Delete</button><div class="r"><button class="btn" id="edit-member">Edit details</button></div></div>`;
+}
+$('#detail').addEventListener('click',async e=>{
+  const c=e.target.closest('.copy'); if(c){ try{await navigator.clipboard.writeText(c.dataset.copy);toast('Copied')}catch(err){toast('Copy failed')} return; }
+  if(e.target.id==='edit-member'){editing=true;renderDetail();}
+  if(e.target.id==='cancel-edit'){editing=false;if(selected==='new')selected=null;renderDetail();}
+  if(e.target.id==='del-member'){
+    const m=members.find(x=>x.id===selected); if(!m) return;
+    if(!e.target.dataset.arm){e.target.dataset.arm='1';e.target.textContent='Click again to delete';return}
+    await deleteMember(m.id); selected=null; toast('Deleted'); renderMembers();
+  }
+});
+$('#detail').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const m=members.find(x=>x.id===selected);
+  const obj={id:m?m.id:uid(),company:$('#f-company').value.trim(),registered:$('#f-registered').value.trim(),tin:$('#f-tin').value.trim(),address:$('#f-address').value.trim(),secretary:$('#f-secretary').value.trim(),mobile:$('#f-mobile').value.trim(),group:$('#f-group').value,source:m?m.source:'Added here'};
+  if(!obj.company) return;
+  try{ await saveMember(obj); selected=obj.id; editing=false; toast('Saved'); if(db) renderDetail(); }
+  catch(err){ toast('Could not save, try again'); }
+});
+$('#add-member').onclick=()=>{selected=null;editing=true;$('#q').value='';q='';renderRows();renderDetail();};
+
+/* ---------- nav ---------- */
+document.querySelectorAll('.nav').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.nav').forEach(x=>x.classList.toggle('active',x===b));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+b.dataset.page));
+  if(b.dataset.page==='members') $('#q').focus();
+  try{localStorage.setItem('hrap:page',b.dataset.page)}catch(e){}
+});
+document.addEventListener('keydown',e=>{ if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){e.preventDefault();$('#nav-members').click();} });
+
+/* ---------- lock screen ---------- */
+const PASSCODE = '12345';
+function boot(){
+  loadLocal();            // instant paint with whatever we have
+  loadWeek();
+  try{ const p=localStorage.getItem('hrap:page'); if(p==='members') $('#nav-members').click(); }catch(e){}
+  initStore();
+}
+function unlock(){
+  $('#lock').setAttribute('hidden','');
+  $('#app').removeAttribute('hidden');
+  boot();
+}
+try{
+  if(sessionStorage.getItem('hrap:unlocked')==='1'){ unlock(); }
+}catch(e){}
+$('#lock-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  const val=$('#lock-pw').value.trim();
+  if(val===PASSCODE){
+    try{sessionStorage.setItem('hrap:unlocked','1')}catch(e){}
+    unlock();
+  }else{
+    $('#lock-err').textContent='Wrong password, try again.';
+    $('#lock-pw').value=''; $('#lock-pw').focus();
+  }
+});
+</script>
+
+</body>
+</html>
