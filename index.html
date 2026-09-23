@@ -85,6 +85,7 @@ h1,h2,h3{font-family:"Fraunces","Iowan Old Style",Georgia,serif;font-weight:600;
 .item .tag.action{font-size:11px;padding:1px 7px;margin-right:6px;vertical-align:1px}
 .item .tag.action.collect{color:var(--aqua-ink);background:var(--aqua)}
 .item .tag.action.deliver{color:var(--accent-ink);background:var(--accent-soft)}
+.item .desc-line{display:block;color:var(--muted);font-size:12.5px;margin-top:2px;font-weight:400}
 .sidecol{display:flex;flex-direction:column;gap:14px}
 .sidecol .card{background:var(--aqua-soft);border-color:var(--aqua)}
 .sidecol .card header{border-color:var(--aqua)}
@@ -228,7 +229,7 @@ h1,h2,h3{font-family:"Fraunces","Iowan Old Style",Georgia,serif;font-weight:600;
       </div>
       <div class="planner" id="planner"></div>
       <p class="hint">Tip: type a time like 9:30 or 2pm in the small box to tag the entry with a time. Press Enter to add.</p>
-      <p class="hint">Format: time, company, department, description, collection or deliver.</p>
+      <p class="hint">Format: company, description, time, collection or deliver, contact, department.</p>
     </section>
 
     <!-- MEMBERS -->
@@ -268,7 +269,8 @@ h1,h2,h3{font-family:"Fraunces","Iowan Old Style",Georgia,serif;font-weight:600;
     <form id="item-form">
       <div class="dhead"><div class="src" id="item-modal-label">Edit entry</div><button type="button" class="mclose" id="item-modal-close" aria-label="Close">×</button></div>
       <div class="fields">
-        <div class="field"><label for="f-item-text">Description</label><textarea id="f-item-text" required placeholder="Company, description..."></textarea></div>
+        <div class="field"><label for="f-item-company" id="f-item-company-label">Company</label><input id="f-item-company" required placeholder="Company or establishment"></div>
+        <div class="field"><label for="f-item-desc">Description</label><textarea id="f-item-desc" placeholder="Description (optional)"></textarea></div>
         <div class="field"><label for="f-item-time">Time</label><input id="f-item-time" placeholder="9:30 or 2pm"></div>
         <div class="field"><label for="f-item-action">Collection or deliver</label><select id="f-item-action"><option value="">None</option><option value="Collection">Collection</option><option value="Deliver">Deliver</option></select></div>
         <div class="field"><label for="f-item-contact">Contact person</label><input id="f-item-contact" placeholder="Contact person"></div>
@@ -374,12 +376,12 @@ function renderPlanner(){
       <header><b>${label}</b><span>${fmt(d,{month:'short',day:'numeric'})}</span></header>
       <ul class="items">${items.map(it=>`<li class="item">
         <input class="chk" type="checkbox" ${it.done?'checked':''} data-id="${it.id}" aria-label="Done">
-        <span class="txt ${it.done?'done':''}">${it.time?`<span class="time">${esc(it.time)}</span>`:''}${it.action?`<span class="tag action ${it.action==='Collection'?'collect':'deliver'}">${esc(it.action)}</span>`:''}${esc(it.text)}${(it.contact||it.dept)?`<span class="meta">${it.contact?`<span class="tag">${esc(it.contact)}</span>`:''}${it.dept?`<span class="tag">${esc(it.dept)}</span>`:''}</span>`:''}</span>
+        <span class="txt ${it.done?'done':''}">${it.time?`<span class="time">${esc(it.time)}</span>`:''}${it.action?`<span class="tag action ${it.action==='Collection'?'collect':'deliver'}">${esc(it.action)}</span>`:''}${esc(it.text)}${it.desc?`<span class="desc-line">${esc(it.desc)}</span>`:''}${(it.contact||it.dept)?`<span class="meta">${it.contact?`<span class="tag">${esc(it.contact)}</span>`:''}${it.dept?`<span class="tag">${esc(it.dept)}</span>`:''}</span>`:''}</span>
         <button class="del" data-id="${it.id}" title="Remove">×</button></li>`).join('')}</ul>
       <form class="adder">
-        <div class="adder-row"><input class="t" placeholder="time" aria-label="Time"><input class="what" placeholder="Add..." aria-label="What"><button type="submit" hidden>Add</button></div>
-        <button type="button" class="more-toggle">+ contact / department / collection or deliver</button>
-        <div class="adder-extra" hidden><input class="contact" placeholder="Contact person" aria-label="Contact person"><input class="dept" placeholder="Department" aria-label="Department"><select class="action" aria-label="Collection or deliver"><option value="">Collection or deliver</option><option value="Collection">Collection</option><option value="Deliver">Deliver</option></select></div>
+        <div class="adder-row"><input class="t" placeholder="time" aria-label="Time"><input class="what" placeholder="Company" aria-label="Company"><button type="submit" hidden>Add</button></div>
+        <button type="button" class="more-toggle">+ description / contact / department / collection or deliver</button>
+        <div class="adder-extra" hidden><input class="desc" placeholder="Description" aria-label="Description"><input class="contact" placeholder="Contact person" aria-label="Contact person"><input class="dept" placeholder="Department" aria-label="Department"><select class="action" aria-label="Collection or deliver"><option value="">Collection or deliver</option><option value="Collection">Collection</option><option value="Deliver">Deliver</option></select></div>
       </form>
     </div>`;
   }).join('');
@@ -401,10 +403,12 @@ $('#planner').addEventListener('submit',e=>{
   e.preventDefault();
   const box=e.target.closest('[data-day]'); const k=box.dataset.day;
   const what=e.target.querySelector('.what'); const t=e.target.querySelector('.t');
+  const desc=e.target.querySelector('.desc');
   const contact=e.target.querySelector('.contact'); const dept=e.target.querySelector('.dept'); const action=e.target.querySelector('.action');
   const text=what.value.trim(); if(!text) return;
   const entry={id:uid(),text,done:false};
   if(t) entry.time=parseTime(t.value);
+  if(desc && desc.value.trim()) entry.desc=desc.value.trim();
   if(contact && contact.value.trim()) entry.contact=contact.value.trim();
   if(dept && dept.value.trim()) entry.dept=dept.value.trim();
   if(action && action.value) entry.action=action.value;
@@ -417,8 +421,8 @@ $('#planner').addEventListener('click',e=>{
   const t=e.target.closest('.more-toggle'); if(!t) return;
   const extra=t.nextElementSibling;
   const open=extra.hasAttribute('hidden');
-  if(open){ extra.removeAttribute('hidden'); t.textContent='- hide contact / department / collection or deliver'; }
-  else{ extra.setAttribute('hidden',''); t.textContent='+ contact / department / collection or deliver'; }
+  if(open){ extra.removeAttribute('hidden'); t.textContent='- hide description / contact / department / collection or deliver'; }
+  else{ extra.setAttribute('hidden',''); t.textContent='+ description / contact / department / collection or deliver'; }
 });
 $('#planner').addEventListener('change',e=>{
   if(e.target.classList.contains('chk')){
@@ -439,13 +443,17 @@ function getList(k){ return k==='todo' ? (weekDoc.todo=weekDoc.todo||[]) : (week
 function openItemModal(k,id){
   const it=getList(k).find(x=>x.id===id); if(!it) return;
   editingItem={k,id};
-  $('#item-modal-label').textContent = k==='todo' ? 'Edit to do' : 'Edit entry';
-  $('#f-item-text').value = it.text||'';
+  const isTodoLabel = k==='todo';
+  $('#item-modal-label').textContent = isTodoLabel ? 'Edit to do' : 'Edit entry';
+  $('#f-item-company-label').textContent = isTodoLabel ? 'To do' : 'Company';
+  $('#f-item-company').value = it.text||'';
+  $('#f-item-desc').value = it.desc||'';
   $('#f-item-time').value = it.time||'';
   $('#f-item-action').value = it.action||'';
   $('#f-item-contact').value = it.contact||'';
   $('#f-item-dept').value = it.dept||'';
   const isTodo = k==='todo';
+  $('#f-item-desc').closest('.field').style.display = isTodo?'none':'';
   $('#f-item-time').closest('.field').style.display = isTodo?'none':'';
   $('#f-item-action').closest('.field').style.display = isTodo?'none':'';
   $('#f-item-contact').closest('.field').style.display = isTodo?'none':'';
@@ -453,7 +461,7 @@ function openItemModal(k,id){
   $('#item-delete').dataset.arm='';
   $('#item-delete').textContent='Delete';
   $('#item-modal').removeAttribute('hidden');
-  $('#f-item-text').focus();
+  $('#f-item-company').focus();
 }
 function closeItemModal(){ $('#item-modal').setAttribute('hidden',''); editingItem=null; }
 $('#planner').addEventListener('click',e=>{
@@ -472,9 +480,10 @@ $('#item-form').addEventListener('submit',e=>{
   const {k,id}=editingItem;
   const list=getList(k);
   const it=list.find(x=>x.id===id); if(!it) return;
-  const text=$('#f-item-text').value.trim(); if(!text) return;
+  const text=$('#f-item-company').value.trim(); if(!text) return;
   it.text=text;
   if(k!=='todo'){
+    const desc=$('#f-item-desc').value.trim(); if(desc) it.desc=desc; else delete it.desc;
     it.time=parseTime($('#f-item-time').value);
     const action=$('#f-item-action').value; if(action) it.action=action; else delete it.action;
     const contact=$('#f-item-contact').value.trim(); if(contact) it.contact=contact; else delete it.contact;
