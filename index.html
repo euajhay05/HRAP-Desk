@@ -64,7 +64,8 @@ h1,h2,h3{font-family:"Fraunces","Iowan Old Style",Georgia,serif;font-weight:600;
 .item .chk{appearance:none;width:17px;height:17px;border:1.6px solid var(--muted);border-radius:5px;margin:2px 0 0;flex:none;display:grid;place-items:center;background:var(--surface)}
 .item .chk:checked{background:var(--accent);border-color:var(--accent)}
 .item .chk:checked::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
-.item .txt{flex:1;min-width:0;overflow-wrap:anywhere}
+.item .txt{flex:1;min-width:0;overflow-wrap:anywhere;cursor:pointer;border-radius:6px}
+.item .txt:hover{text-decoration:underline;text-decoration-color:var(--accent)}
 .item .txt.done{color:var(--muted);text-decoration:line-through}
 .item .time{display:inline-block;font-size:11px;font-weight:700;color:var(--aqua-ink);background:var(--aqua);padding:1px 7px;border-radius:999px;margin-right:6px;font-variant-numeric:tabular-nums;vertical-align:1px}
 .item .del{opacity:0;border:0;background:none;color:var(--muted);padding:0 2px;font-size:16px;line-height:1}
@@ -139,6 +140,14 @@ h1,h2,h3{font-family:"Fraunces","Iowan Old Style",Georgia,serif;font-weight:600;
 .dfoot .r{display:flex;gap:8px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
 .toast.show{opacity:1;transform:translateX(-50%)}
+.modal-overlay{position:fixed;inset:0;background:rgba(58,37,40,.35);display:flex;align-items:center;justify-content:center;z-index:15;padding:20px}
+.modal-card{width:100%;max-width:420px;max-height:90vh;overflow:auto;background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow)}
+.modal-card .dhead{padding:18px 20px 14px;border-bottom:1px solid var(--line);background:var(--accent-soft2);border-radius:var(--radius) var(--radius) 0 0;display:flex;justify-content:space-between;align-items:center}
+.modal-card .dhead .src{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-ink)}
+.modal-card .mclose{border:0;background:none;color:var(--muted);font-size:20px;line-height:1;padding:0 2px}
+.modal-card .mclose:hover{color:var(--ink)}
+.modal-card .fields{padding:16px 20px}
+.modal-card .dfoot{display:flex;justify-content:space-between;gap:8px;padding:12px 20px 18px;border-top:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.toast{transition:none}}
 .menubtn{display:none}
 @media (max-width:1100px){
@@ -254,6 +263,21 @@ h1,h2,h3{font-family:"Fraunces","Iowan Old Style",Georgia,serif;font-weight:600;
   </main>
 </div>
 <div class="toast" id="toast"></div>
+<div class="modal-overlay" id="item-modal" hidden>
+  <div class="modal-card">
+    <form id="item-form">
+      <div class="dhead"><div class="src" id="item-modal-label">Edit entry</div><button type="button" class="mclose" id="item-modal-close" aria-label="Close">×</button></div>
+      <div class="fields">
+        <div class="field"><label for="f-item-text">Description</label><textarea id="f-item-text" required placeholder="Company, description..."></textarea></div>
+        <div class="field"><label for="f-item-time">Time</label><input id="f-item-time" placeholder="9:30 or 2pm"></div>
+        <div class="field"><label for="f-item-action">Collection or deliver</label><select id="f-item-action"><option value="">None</option><option value="Collection">Collection</option><option value="Deliver">Deliver</option></select></div>
+        <div class="field"><label for="f-item-contact">Contact person</label><input id="f-item-contact" placeholder="Contact person"></div>
+        <div class="field"><label for="f-item-dept">Department</label><input id="f-item-dept" placeholder="Department"></div>
+      </div>
+      <div class="dfoot"><button type="button" class="btn danger" id="item-delete">Delete</button><div class="r"><button type="button" class="btn ghost" id="item-cancel">Cancel</button><button class="btn primary" type="submit">Save</button></div></div>
+    </form>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
@@ -410,6 +434,62 @@ $('#planner').addEventListener('click',e=>{
   saveWeek(); renderPlanner();
 });
 $('#planner').addEventListener('input',e=>{ if(e.target.id==='notes'){ weekDoc.notes=e.target.value; saveWeek(); } });
+let editingItem=null; // {k, id}
+function getList(k){ return k==='todo' ? (weekDoc.todo=weekDoc.todo||[]) : (weekDoc.days[k]=weekDoc.days[k]||[]); }
+function openItemModal(k,id){
+  const it=getList(k).find(x=>x.id===id); if(!it) return;
+  editingItem={k,id};
+  $('#item-modal-label').textContent = k==='todo' ? 'Edit to do' : 'Edit entry';
+  $('#f-item-text').value = it.text||'';
+  $('#f-item-time').value = it.time||'';
+  $('#f-item-action').value = it.action||'';
+  $('#f-item-contact').value = it.contact||'';
+  $('#f-item-dept').value = it.dept||'';
+  const isTodo = k==='todo';
+  $('#f-item-time').closest('.field').style.display = isTodo?'none':'';
+  $('#f-item-action').closest('.field').style.display = isTodo?'none':'';
+  $('#f-item-contact').closest('.field').style.display = isTodo?'none':'';
+  $('#f-item-dept').closest('.field').style.display = isTodo?'none':'';
+  $('#item-delete').dataset.arm='';
+  $('#item-delete').textContent='Delete';
+  $('#item-modal').removeAttribute('hidden');
+  $('#f-item-text').focus();
+}
+function closeItemModal(){ $('#item-modal').setAttribute('hidden',''); editingItem=null; }
+$('#planner').addEventListener('click',e=>{
+  const t=e.target.closest('.txt'); if(!t) return;
+  const li=t.closest('.item'); const box=t.closest('[data-day]'); if(!li||!box) return;
+  const id=li.querySelector('.chk')?.dataset.id; if(!id) return;
+  openItemModal(box.dataset.day,id);
+});
+$('#item-modal-close').onclick=closeItemModal;
+$('#item-cancel').onclick=closeItemModal;
+$('#item-modal').addEventListener('click',e=>{ if(e.target.id==='item-modal') closeItemModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && !$('#item-modal').hasAttribute('hidden')) closeItemModal(); });
+$('#item-form').addEventListener('submit',e=>{
+  e.preventDefault();
+  if(!editingItem) return;
+  const {k,id}=editingItem;
+  const list=getList(k);
+  const it=list.find(x=>x.id===id); if(!it) return;
+  const text=$('#f-item-text').value.trim(); if(!text) return;
+  it.text=text;
+  if(k!=='todo'){
+    it.time=parseTime($('#f-item-time').value);
+    const action=$('#f-item-action').value; if(action) it.action=action; else delete it.action;
+    const contact=$('#f-item-contact').value.trim(); if(contact) it.contact=contact; else delete it.contact;
+    const dept=$('#f-item-dept').value.trim(); if(dept) it.dept=dept; else delete it.dept;
+  }
+  saveWeek(); renderPlanner(); closeItemModal(); toast('Saved');
+});
+$('#item-delete').addEventListener('click',e=>{
+  if(!editingItem) return;
+  if(!e.target.dataset.arm){ e.target.dataset.arm='1'; e.target.textContent='Click again to delete'; return; }
+  const {k,id}=editingItem;
+  if(k==='todo') weekDoc.todo=weekDoc.todo.filter(x=>x.id!==id);
+  else weekDoc.days[k]=(weekDoc.days[k]||[]).filter(x=>x.id!==id);
+  saveWeek(); renderPlanner(); closeItemModal(); toast('Deleted');
+});
 $('#prev-week').onclick=()=>{cursor.setDate(cursor.getDate()-7);loadWeek()};
 $('#next-week').onclick=()=>{cursor.setDate(cursor.getDate()+7);loadWeek()};
 $('#this-week').onclick=()=>{cursor=new Date();loadWeek()};
